@@ -32,7 +32,7 @@ public class HandlerJWT {
         // Generates an UUID and removes dashes from it
         String jti = UUID.randomUUID().toString().replace("-", "");
         // version. Supposedly static (either 1 or 2. 1 in doc text, but 2 in example from High Mobility)
-        String ver = "2";
+        String ver = "1";
 
         String jsonStructure = "{ \n 'ver': " + ver + ",\n 'iss': " + iss + ",\n " +
                 "'aud': " + aud + ",\n 'jti': " + jti + ",\n 'iat': " + iatString + "\n}";

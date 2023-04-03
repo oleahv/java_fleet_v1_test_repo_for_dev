@@ -1,8 +1,6 @@
 import com.highmobility.hmkitfleet.HMKitFleet;
 import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
-import com.highmobility.hmkitfleet.model.Brand;
-import com.highmobility.hmkitfleet.model.ClearanceStatus;
-import com.highmobility.hmkitfleet.model.RequestClearanceResponse;
+import com.highmobility.hmkitfleet.model.*;
 import com.highmobility.hmkitfleet.network.Response;
 
 import java.util.List;
@@ -27,7 +25,8 @@ public class Requester {
 
 
 
-
+    ControlMeasure measure = new Odometer(110000, Odometer.Length.KILOMETERS);
+    List<ControlMeasure> measures = List.of(measure);
     
 
     
@@ -52,14 +51,16 @@ public class Requester {
                 "53ea2ef0-8fbc-4b98-b3b7-edbafebe5ca4",
                 "GgmBzs2Lo9UKGcnc6ftuAg0AzzQ63OYE"
         );
+        hmkitFleet.setEnvironment(HMKitFleet.Environment.SANDBOX);
         HMKitFleet.INSTANCE.setConfiguration(configuration);
+
 
 
         Response<RequestClearanceResponse> response =
                 null;
-        // LEGG TIL MERZEDES-BENZ VERDIER SOM TRENGS!!
+        // LEGG TIL MERZEDES-BENZ VERDIER SOM TRENGS. Se nederst i kommentert ut kode.
         try {
-            response = hmkitFleet.requestClearance(vin, Brand.SANDBOX).get();
+            response = hmkitFleet.requestClearance(vin, Brand.SANDBOX, measures).get();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
