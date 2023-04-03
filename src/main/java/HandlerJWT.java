@@ -7,6 +7,7 @@ import java.security.KeyPair;
 import java.util.UUID;
 
 public class HandlerJWT {
+    //t
 
     // for production: https://api.high-mobility.com/v1 . For emulators/development: https://sandbox.api.high-mobility.com/v1
 
