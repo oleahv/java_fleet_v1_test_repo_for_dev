@@ -40,6 +40,9 @@ public class Requester {
    // https://github.com/highmobility/hmkit-fleet-consumer/blob/main/hmkit-fleet-consumer/src/main/java/WebServer.java
 
     HMKitFleet hmkitFleet = HMKitFleet.INSTANCE;
+
+    // Something is not quite right here. Seems to authenticate while offline with simulator
+    // (might be intended form High Mobility)
     public void Test1Func(){
 
 
