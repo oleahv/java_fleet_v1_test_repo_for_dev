@@ -4,6 +4,7 @@ import com.highmobility.hmkitfleet.model.*;
 import com.highmobility.hmkitfleet.network.Response;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
@@ -111,6 +112,48 @@ public class Requester {
 
         return response.getResponse().toString();
 
+    }
+
+    public void Case2(){
+        Response<List<ClearanceStatus>> response = null;
+        try {
+            response = hmkitFleet.getClearanceStatuses().get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (response.getResponse() != null) {
+            logger.info(format("getClearanceStatuses response"));
+            for (ClearanceStatus status : response.getResponse()) {
+                logger.info(format("status: %s:%s",
+                        status.getVin(),
+                        status.getStatus()));
+            }
+        } else {
+            logger.info(format("getClearanceStatuses error: %s", response.getError().getTitle()));
+        }
+    }
+    public void Case3(){
+      /*  // use the stored VehicleAccess if it exists
+        Optional<VehicleAccess> storedVehicleAccess = vehicleAccessStore.read(vin);
+        if (storedVehicleAccess.isPresent()) return storedVehicleAccess.get();
+
+// download VehicleAccess if it does not exist
+        Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
+        if (accessResponse.getError() != null)
+            throw new RuntimeException(accessResponse.getError().getDetail());
+
+// store the downloaded vehicle access
+        VehicleAccess serverVehicleAccess = accessResponse.getResponse();
+        vehicleAccessStore.store(serverVehicleAccess);
+
+        return serverVehicleAccess;
+*/
+    }
+    public void Case4(){
+        // ...
     }
 }
   /*
