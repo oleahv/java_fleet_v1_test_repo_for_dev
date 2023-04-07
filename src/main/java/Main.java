@@ -1,3 +1,5 @@
+import static java.lang.System.exit;
+
 public class Main {
     public static void main(String[] args) {
         UserActions userActions = new UserActions();
@@ -5,6 +7,8 @@ public class Main {
         while(!stopLoopFlag) {
             stopLoopFlag = userActions.DetermineActionBasedOnUserInputFromTerminal();
         }
+        // Used for exiting the application, as there seems to be threads running from hmkit
+        exit(0);
 
 
        /* System.out.println("Hello world!");

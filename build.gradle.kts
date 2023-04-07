@@ -14,7 +14,10 @@ dependencies {
     implementation("com.high-mobility:hmkit-fleet:0.7.0")
     // 13.2.0 not found, so using 13.1.1 (13.2.0 is released, but not on mavenCentral/Sona as of 10.3.2023)
     implementation("com.high-mobility:hmkit-auto-api:13.1.1")
+    implementation("com.high-mobility:hmkit-crypto-telematics:0.1")
 
+
+    // jwt
     implementation ("io.jsonwebtoken:jjwt-api:0.11.5")
     runtimeOnly ("io.jsonwebtoken:jjwt-impl:0.11.5")
 

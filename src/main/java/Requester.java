@@ -41,12 +41,14 @@ public class Requester {
    // https://github.com/highmobility/hmkit-fleet-consumer/blob/main/hmkit-fleet-consumer/src/main/java/WebServer.java
 
     HMKitFleet hmkitFleet = HMKitFleet.INSTANCE;
+    //TODO: todo
+    VehicleAccessStore vehicleAccessStore = new VehicleAccessStore();
 
-    // Something is not quite right here. Seems to authenticate while offline with simulator
+    // Authenticate the user to HM with app. Sends a request to link the car with the app on HM. (Note, not instant)
     // (might be intended form High Mobility)
-    public void Test1Func(){
+    public void ClientCertificate(){
 
-
+        // https://docs.high-mobility.com/guides/getting-started/fleet/
         ServiceAccountApiConfiguration configuration = new ServiceAccountApiConfiguration(
                 "4641e174-4134-44e0-a7ad-8b7110dddeb0",
                 "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgE76M1h3vVMe0qX8i\ngVxXT61MzKsXag4EeBp0LT0hnsmhRANCAASX/N2hmY9Y55zEboEGlyVCr/5YZ7BK\\nyeh8zs/MFmTaUWQUfcV1BleFsCmkg6AuAYYHUUHFpf69i8dhOHI2rjSf\n-----END PRIVATE KEY-----",
@@ -57,8 +59,6 @@ public class Requester {
         );
         hmkitFleet.setEnvironment(HMKitFleet.Environment.SANDBOX);
         HMKitFleet.INSTANCE.setConfiguration(configuration);
-
-
 
         Response<RequestClearanceResponse> response =
                 null;
@@ -77,7 +77,7 @@ public class Requester {
             if (requestClearanceResponse.getStatus() == ClearanceStatus.Status.ERROR) {
                 // description property is filled when the status is ERROR
 
-               // WARNING, changed to .info instead of .error
+                // WARNING, changed to .info instead of .error
                 logger.info(format("Request clearance error: %s", requestClearanceResponse.getDescription()));
             } else {
                 logger.info(format("requestClearances response: %s", requestClearanceResponse));
@@ -86,10 +86,11 @@ public class Requester {
         else {
             logger.info(format("requestClearances error: %s", response.getError().getTitle()));
         }
+
     }
 
-
-    public String Test2Func(){
+    // Checks the status of clearance based on vin number
+    public String CheckClearanceStatus(){
         Response<List<ClearanceStatus>> response = null;
         try {
             response = hmkitFleet.getClearanceStatuses().get();
@@ -114,7 +115,7 @@ public class Requester {
 
     }
 
-    public void Case2(){
+    /*public void Case2(){
         Response<List<ClearanceStatus>> response = null;
         try {
             response = hmkitFleet.getClearanceStatuses().get();
@@ -135,25 +136,47 @@ public class Requester {
             logger.info(format("getClearanceStatuses error: %s", response.getError().getTitle()));
         }
     }
+    */
+
+
     public void Case3(){
-      /*  // use the stored VehicleAccess if it exists
+
+        // use the stored VehicleAccess if it exists
         Optional<VehicleAccess> storedVehicleAccess = vehicleAccessStore.read(vin);
-        if (storedVehicleAccess.isPresent()) return storedVehicleAccess.get();
+        if (storedVehicleAccess.isPresent()) {
+            return storedVehicleAccess.get();
+        }
 
-// download VehicleAccess if it does not exist
+        // download VehicleAccess if it does not exist
         Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
-        if (accessResponse.getError() != null)
+        if (accessResponse.getError() != null) {
             throw new RuntimeException(accessResponse.getError().getDetail());
+        }
 
-// store the downloaded vehicle access
+
+        // store the downloaded vehicle access
         VehicleAccess serverVehicleAccess = accessResponse.getResponse();
         vehicleAccessStore.store(serverVehicleAccess);
 
         return serverVehicleAccess;
-*/
+
+
     }
-    public void Case4(){
-        // ...
+    public void DeleteClearance(){
+        Response<RequestClearanceResponse> response = null;
+        try {
+            response = hmkitFleet.deleteClearance(vin).get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        if (response.getError() != null) {
+                logger.info(format("deleteClearance error: %s", response.getError().getDetail()));
+            } else {
+                logger.info("deleteClearance success %s");
+            }
+
     }
 }
   /*

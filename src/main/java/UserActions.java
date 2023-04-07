@@ -56,16 +56,18 @@ public class UserActions {
                 break;
             case 2:
                 System.out.println("2: Get clearance status");
-                requester.Case2();
+                String requestResponse  = requester.CheckClearanceStatus();
+                // Works as an log. TODO: remove when not needed anymore (one everything works as expected)
+                System.out.println(requestResponse);
                 break;
             case 3:
                 // NOTE: persistent, so store securely
-                System.out.println("3: Get vehicle access");
+                System.out.println("3: Get vehicle access (WIP)");
                 requester.Case3();
                 break;
             case 4:
                 System.out.println("4: Delete");
-                requester.Case4();
+                requester.DeleteClearance();
                 break;
             default:
                 System.out.println("Input error. Please only use single digit number from 1-4");
@@ -87,10 +89,10 @@ public class UserActions {
         System.out.println("Hello Auth!");
         //HandlerJWT handlerJWT = new HandlerJWT();
         //handlerJWT.CreateJWT();
-        requester.Test1Func();
-        System.out.println("T1, done");
-        String res2 = requester.Test2Func();
-        System.out.println(res2);
+        requester.ClientCertificate();
+        System.out.println("ClientCertificate :::::::::::::::: done");
+        //String res2 = requester.CheckClearanceStatus();
+        //System.out.println(res2);
     }
 
 
