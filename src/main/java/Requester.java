@@ -47,9 +47,7 @@ public class Requester {
         // LEGG TIL MERZEDES-BENZ VERDIER SOM TRENGS. Se nederst i kommentert ut kode.
         try {
             response = hmkitFleet.requestClearance(vin, Brand.SANDBOX, measures).get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
 
