@@ -3,33 +3,16 @@ import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
 import com.highmobility.hmkitfleet.model.*;
 import com.highmobility.hmkitfleet.network.Response;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
-
 import static java.lang.String.format;
 
 public class Requester {
-
-
- /*     ServiceAccountApiConfiguration configuration = new ServiceAccountApiConfiguration(
-            "e6396b08-ca81-4aa0-be1c-c395f1a27e77", // Add Service Account API Key here
-            "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgzlCnmkVsYaZVgS6x\nnRNeRH67i8PS0pCsbUftvG+2thGhRANCAASQQRzR2SA441J9v2oynG5dZF8NYGO4\nMQuDdezfzgefyUFIkO5bsbeRRG0hZbLnSE5G+WwoDVBvFppNEWfzNDK2\n-----END PRIVATE KEY-----", // Add Service Account Private Key here
-            "",
-            "",
-            "53ea2ef0-8fbc-4b98-b3b7-edbafebe5ca4", // Add OAuth2 Client ID here
-            "GgmBzs2Lo9UKGcnc6ftuAg0AzzQ63OYE"  // Add OAuth2 Client Secret here
-            );
-    HMKitFleet.INSTANCE.setConfiguration(configuration);
-    */
-
-
-
     ControlMeasure measure = new Odometer(110000, Odometer.Length.KILOMETERS);
     List<ControlMeasure> measures = List.of(measure);
-    
-
     
 
 
@@ -41,8 +24,7 @@ public class Requester {
    // https://github.com/highmobility/hmkit-fleet-consumer/blob/main/hmkit-fleet-consumer/src/main/java/WebServer.java
 
     HMKitFleet hmkitFleet = HMKitFleet.INSTANCE;
-    //TODO: todo
-    VehicleAccessStore vehicleAccessStore = new VehicleAccessStore();
+
 
     // Authenticate the user to HM with app. Sends a request to link the car with the app on HM. (Note, not instant)
     // (might be intended form High Mobility)
@@ -140,9 +122,11 @@ public class Requester {
 
 
     public void Case3(){
+        Path path = Paths.get("vehicleAccess.json");
+        System.out.println(path);
 
         // use the stored VehicleAccess if it exists
-        Optional<VehicleAccess> storedVehicleAccess = vehicleAccessStore.read(vin);
+  /*      Optional<VehicleAccess> storedVehicleAccess = vehicleAccessStore.read(vin);
         if (storedVehicleAccess.isPresent()) {
             return storedVehicleAccess.get();
         }
@@ -159,7 +143,7 @@ public class Requester {
         vehicleAccessStore.store(serverVehicleAccess);
 
         return serverVehicleAccess;
-
+*/
 
     }
     public void DeleteClearance(){
@@ -178,6 +162,49 @@ public class Requester {
             }
 
     }
+
+    public void GetEligibility(){
+        Response<EligibilityStatus> response = null;
+        try {
+            response = hmkitFleet.getEligibility(vin, Brand.SANDBOX).get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (response.getResponse() != null) {
+            logger.info(format("getEligibility response: %s", response.getResponse()));
+        } else {
+            logger.info(format("getEligibility error: %s", response.getError().getTitle()));
+        }
+
+    }
+
+    // Historical
+    public void GetClearanceStatusesOfAllCars() {
+        Response<List<ClearanceStatus>> response = null;
+        try {
+            response = hmkitFleet.getClearanceStatuses().get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (response.getResponse() != null) {
+            logger.info("getClearanceStatuses response");
+            for (ClearanceStatus status : response.getResponse()) {
+                logger.info(format("status: %s:%s",
+                        status.getVin(),
+                        status.getStatus()));
+            }
+        } else {
+            logger.info(format("getClearanceStatuses error: %s", response.getError().getTitle()));
+        }
+    }
+
+
 }
   /*
     // for mercedes benze
@@ -189,3 +216,13 @@ Response<RequestClearanceResponse> response =
 
      */
 
+ /*     ServiceAccountApiConfiguration configuration = new ServiceAccountApiConfiguration(
+            "e6396b08-ca81-4aa0-be1c-c395f1a27e77", // Add Service Account API Key here
+            "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgzlCnmkVsYaZVgS6x\nnRNeRH67i8PS0pCsbUftvG+2thGhRANCAASQQRzR2SA441J9v2oynG5dZF8NYGO4\nMQuDdezfzgefyUFIkO5bsbeRRG0hZbLnSE5G+WwoDVBvFppNEWfzNDK2\n-----END PRIVATE KEY-----", // Add Service Account Private Key here
+            "",
+            "",
+            "53ea2ef0-8fbc-4b98-b3b7-edbafebe5ca4", // Add OAuth2 Client ID here
+            "GgmBzs2Lo9UKGcnc6ftuAg0AzzQ63OYE"  // Add OAuth2 Client Secret here
+            );
+    HMKitFleet.INSTANCE.setConfiguration(configuration);
+    */

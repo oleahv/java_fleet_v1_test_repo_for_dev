@@ -1,13 +1,8 @@
-import com.highmobility.hmkitfleet.model.ClearanceStatus;
-import com.highmobility.hmkitfleet.network.Response;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import static java.lang.String.format;
+
 
 public class UserActions {
 
@@ -28,7 +23,8 @@ public class UserActions {
                  1: Auth\s
                  2: Get clearance status\s
                  3: Post\s
-                 4: Delete\
+                 4: Delete\s
+                 5: Get clearance statuses of all cars\
                 """);
 
         try {
@@ -53,12 +49,14 @@ public class UserActions {
             case 1:
                 System.out.println("1: Auth");
                 DoCase1();
+                requester.GetEligibility();
                 break;
             case 2:
                 System.out.println("2: Get clearance status");
-                String requestResponse  = requester.CheckClearanceStatus();
-                // Works as an log. TODO: remove when not needed anymore (one everything works as expected)
-                System.out.println(requestResponse);
+                //String requestResponse  =
+                requester.CheckClearanceStatus();
+                // Works as a log. TODO: remove when not needed anymore (one everything works as expected)
+                //System.out.println(requestResponse);
                 break;
             case 3:
                 // NOTE: persistent, so store securely
@@ -68,6 +66,10 @@ public class UserActions {
             case 4:
                 System.out.println("4: Delete");
                 requester.DeleteClearance();
+                break;
+            case 5:
+                System.out.println("5: Get clearance status of all cars");
+                requester.GetClearanceStatusesOfAllCars();
                 break;
             default:
                 System.out.println("Input error. Please only use single digit number from 1-4");
