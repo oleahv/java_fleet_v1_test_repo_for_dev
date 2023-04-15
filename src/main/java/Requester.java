@@ -2,10 +2,15 @@ import com.highmobility.hmkitfleet.HMKitFleet;
 import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
 import com.highmobility.hmkitfleet.model.*;
 import com.highmobility.hmkitfleet.network.Response;
+import kotlinx.serialization.json.Json;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 import static java.lang.String.format;
@@ -13,8 +18,9 @@ import static java.lang.String.format;
 public class Requester {
     ControlMeasure measure = new Odometer(110000, Odometer.Length.KILOMETERS);
     List<ControlMeasure> measures = List.of(measure);
-    
 
+    // Path to directory that stores json files (access tokens)
+    String baseURI = "src/main/java/accessTokens";
 
     // Vin number of the vehicle. Can do asynch auth with a list (confirm)
     String vin = "1HMHLS5MF8GFR2DOE";
@@ -120,28 +126,8 @@ public class Requester {
 
 
     public void Case3(){
-        Path path = Paths.get("vehicleAccess.json");
-        System.out.println(path);
-
-        // use the stored VehicleAccess if it exists
-  /*      Optional<VehicleAccess> storedVehicleAccess = vehicleAccessStore.read(vin);
-        if (storedVehicleAccess.isPresent()) {
-            return storedVehicleAccess.get();
-        }
-
-        // download VehicleAccess if it does not exist
-        Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
-        if (accessResponse.getError() != null) {
-            throw new RuntimeException(accessResponse.getError().getDetail());
-        }
 
 
-        // store the downloaded vehicle access
-        VehicleAccess serverVehicleAccess = accessResponse.getResponse();
-        vehicleAccessStore.store(serverVehicleAccess);
-
-        return serverVehicleAccess;
-*/
 
     }
     public void DeleteClearance(){
@@ -203,6 +189,87 @@ public class Requester {
     }
 
 
+    // Checks if the file exists. Creates it if it does not
+    //https://www.webucator.com/article/how-to-display-the-contents-of-a-directory-in-java/
+    public File FileChecker() {
+        String expectedFileName = vin + ".json";
+
+        // Check if vehicle access token is on file, create one if not
+        //Path filePath = Path.of( baseURI + vin + ".json");
+        File tokenDirectory = new File(baseURI);
+
+        File[] filesInDirectory = tokenDirectory.listFiles();
+        for (int i = 0; i < Objects.requireNonNull(filesInDirectory).length; i++) {
+            if (filesInDirectory[i].getName().equals(expectedFileName)) {
+                System.out.println("found file");
+                return filesInDirectory[i];
+            }
+        }
+
+        //File not found. Creating it
+        try {
+            Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
+            VehicleAccess serverVehicleAccess = accessResponse.getResponse();
+            System.out.println(serverVehicleAccess);
+
+            /*
+            String encoded = Json.Default.encodeToString(VehicleAccess.Companion.serializer(), serverVehicleAccess);
+
+            // TODO: store securely
+            Files.write(baseURI, encoded.getBytes(), StandardOpenOption.CREATE);*/
+
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        //File not found. Creating it
+        // Create file
+
+        // Just to avoid error for now. DOES NOT EXIST
+        File file = new File("TEST");
+        return file;
+    }
+
+    public void Case6() {
+        File file;
+        String content = null;
+        file = FileChecker();
+        /*
+        Path filePath = Path.of(file.toURI());
+        System.out.println(filePath);
+        try {
+            content = new String(Files.readAllBytes(filePath));
+            //System.out.println(content);
+        } catch (IOException e) {
+            //throw new RuntimeException(e);
+        }
+        System.out.println(content);
+  */
+  /*      String encoded = Json.Default.encodeToString(VehicleAccess.Companion.serializer(), content);
+
+
+        // TODO: store securely
+        Files.write(baseURI, encoded.getBytes(), StandardOpenOption.CREATE);
+*/
+
+    }
+
+ /* if (!file.isFile()) {
+            System.out.println("File does not exist");
+            try {
+                Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
+                VehicleAccess serverVehicleAccess = accessResponse.getResponse();
+
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println(file);
+
+        } else {
+            System.out.println("File exists");
+        }*/
+
 }
   /*
     // for mercedes benze
@@ -224,3 +291,29 @@ Response<RequestClearanceResponse> response =
             );
     HMKitFleet.INSTANCE.setConfiguration(configuration);
     */
+
+
+/*
+Path path = Paths.get("vehicleAccess.json");
+        System.out.println(path);
+
+        // use the stored VehicleAccess if it exists
+        Optional<VehicleAccess> storedVehicleAccess = vehicleAccessStore.read(vin);
+        if (storedVehicleAccess.isPresent()) {
+            return storedVehicleAccess.get();
+        }
+
+        // download VehicleAccess if it does not exist
+        Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
+        if (accessResponse.getError() != null) {
+            throw new RuntimeException(accessResponse.getError().getDetail());
+        }
+
+
+        // store the downloaded vehicle access
+        VehicleAccess serverVehicleAccess = accessResponse.getResponse();
+        vehicleAccessStore.store(serverVehicleAccess);
+
+        return serverVehicleAccess;
+
+ */

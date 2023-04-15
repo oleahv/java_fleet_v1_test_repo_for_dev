@@ -17,6 +17,9 @@ dependencies {
     implementation("com.high-mobility:hmkit-crypto-telematics:0.1")
 
 
+    //json
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
+
     // jwt
     implementation ("io.jsonwebtoken:jjwt-api:0.11.5")
     runtimeOnly ("io.jsonwebtoken:jjwt-impl:0.11.5")

@@ -22,9 +22,10 @@ public class UserActions {
                  0: Exit program\s
                  1: Auth\s
                  2: Get clearance status\s
-                 3: Post\s
-                 4: Delete\s
-                 5: Get clearance statuses of all cars\
+                 3: Get vehicle access (WIP)\s
+                 4: Delete car\s
+                 5: Get clearance statuses of all cars\s
+                 6: Post request. Register car based on vin\
                 """);
 
         try {
@@ -64,15 +65,19 @@ public class UserActions {
                 requester.Case3();
                 break;
             case 4:
-                System.out.println("4: Delete");
+                System.out.println("4: Delete car");
                 requester.DeleteClearance();
                 break;
             case 5:
                 System.out.println("5: Get clearance status of all cars");
                 requester.GetClearanceStatusesOfAllCars();
                 break;
+            case 6:
+                System.out.println("6: Post request. Register car based on vin");
+                requester.Case6();
+                break;
             default:
-                System.out.println("Input error. Please only use single digit number from 1-4");
+                System.out.println("Input error. Please only use single digit number");
                 break;
         }
         return false;
