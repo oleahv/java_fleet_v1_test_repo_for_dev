@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Objects;
@@ -21,6 +22,8 @@ public class Requester {
 
     // Path to directory that stores json files (access tokens)
     String baseURI = "src/main/java/accessTokens";
+
+    Path pathAccessToken = Paths.get(baseURI + "/vehicleAccess.json");
 
     // Vin number of the vehicle. Can do asynch auth with a list (confirm)
     String vin = "1HMHLS5MF8GFR2DOE";
@@ -210,15 +213,16 @@ public class Requester {
         try {
             Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
             VehicleAccess serverVehicleAccess = accessResponse.getResponse();
-            System.out.println(serverVehicleAccess);
+            //System.out.println(serverVehicleAccess);
 
-            /*
+
             String encoded = Json.Default.encodeToString(VehicleAccess.Companion.serializer(), serverVehicleAccess);
 
             // TODO: store securely
-            Files.write(baseURI, encoded.getBytes(), StandardOpenOption.CREATE);*/
+            Files.write(pathAccessToken, encoded.getBytes(), StandardOpenOption.CREATE);
 
-        } catch (InterruptedException | ExecutionException e) {
+
+        } catch (InterruptedException | ExecutionException | IOException e) {
             throw new RuntimeException(e);
         }
 
