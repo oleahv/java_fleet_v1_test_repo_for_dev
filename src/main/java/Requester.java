@@ -1,7 +1,12 @@
+import com.highmobility.autoapi.Command;
+import com.highmobility.autoapi.CommandResolver;
+import com.highmobility.autoapi.Diagnostics;
 import com.highmobility.hmkitfleet.HMKitFleet;
 import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
 import com.highmobility.hmkitfleet.model.*;
 import com.highmobility.hmkitfleet.network.Response;
+import com.highmobility.hmkitfleet.network.TelematicsCommandResponse;
+import com.highmobility.hmkitfleet.network.TelematicsResponse;
 import kotlinx.serialization.json.Json;
 
 import java.io.File;
@@ -23,21 +28,23 @@ public class Requester {
     // Path to directory that stores json files (access tokens)
     String baseURI = "src/main/java/accessTokens";
 
-    Path pathAccessToken = Paths.get(baseURI + "/vehicleAccess.json");
 
     // Vin number of the vehicle. Can do asynch auth with a list (confirm)
     String vin = "1HMHLS5MF8GFR2DOE";
+    Brand CarBrand = Brand.SANDBOX;
+    Path pathAccessToken = Paths.get(baseURI + "/" + vin + "_vehicleAccess.json");
+
     Logger logger = Logger.getLogger("LoggerTest1");
 
 
-   // https://github.com/highmobility/hmkit-fleet-consumer/blob/main/hmkit-fleet-consumer/src/main/java/WebServer.java
+    // https://github.com/highmobility/hmkit-fleet-consumer/blob/main/hmkit-fleet-consumer/src/main/java/WebServer.java
 
     HMKitFleet hmkitFleet = HMKitFleet.INSTANCE;
 
 
     // Authenticate the user to HM with app. Sends a request to link the car with the app on HM. (Note, not instant)
     // (might be intended form High Mobility)
-    public void ClientCertificate(){
+    public void ClientCertificate() {
 
         // https://docs.high-mobility.com/guides/getting-started/fleet/
         ServiceAccountApiConfiguration configuration = new ServiceAccountApiConfiguration(
@@ -55,7 +62,7 @@ public class Requester {
                 null;
         // LEGG TIL MERZEDES-BENZ VERDIER SOM TRENGS. Se nederst i kommentert ut kode.
         try {
-            response = hmkitFleet.requestClearance(vin, Brand.SANDBOX, measures).get();
+            response = hmkitFleet.requestClearance(vin, CarBrand, measures).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
@@ -71,15 +78,14 @@ public class Requester {
             } else {
                 logger.info(format("requestClearances response: %s", requestClearanceResponse));
             }
-        }
-        else {
+        } else {
             logger.info(format("requestClearances error: %s", response.getError().getTitle()));
         }
 
     }
 
     // Checks the status of clearance based on vin number
-    public String CheckClearanceStatus(){
+    public String CheckClearanceStatus() {
         Response<List<ClearanceStatus>> response = null;
         try {
             response = hmkitFleet.getClearanceStatuses().get();
@@ -128,12 +134,12 @@ public class Requester {
     */
 
 
-    public void Case3(){
-
+    public void Case3() {
 
 
     }
-    public void DeleteClearance(){
+
+    public void DeleteClearance() {
         Response<RequestClearanceResponse> response = null;
         try {
             response = hmkitFleet.deleteClearance(vin).get();
@@ -143,14 +149,14 @@ public class Requester {
             throw new RuntimeException(e);
         }
         if (response.getError() != null) {
-                logger.info(format("deleteClearance error: %s", response.getError().getDetail()));
-            } else {
-                logger.info("deleteClearance success %s");
-            }
+            logger.info(format("deleteClearance error: %s", response.getError().getDetail()));
+        } else {
+            logger.info("deleteClearance success %s");
+        }
 
     }
 
-    public void GetEligibility(){
+    public void GetEligibility() {
         Response<EligibilityStatus> response = null;
         try {
             response = hmkitFleet.getEligibility(vin, Brand.SANDBOX).get();
@@ -195,20 +201,12 @@ public class Requester {
     // Checks if the file exists. Creates it if it does not
     //https://www.webucator.com/article/how-to-display-the-contents-of-a-directory-in-java/
     public File FileChecker() {
-        String expectedFileName = vin + ".json";
-
-        // Check if vehicle access token is on file, create one if not
-        //Path filePath = Path.of( baseURI + vin + ".json");
-        File tokenDirectory = new File(baseURI);
-
-        File[] filesInDirectory = tokenDirectory.listFiles();
-        for (int i = 0; i < Objects.requireNonNull(filesInDirectory).length; i++) {
-            if (filesInDirectory[i].getName().equals(expectedFileName)) {
-                System.out.println("found file");
-                return filesInDirectory[i];
-            }
+        File fileResultFromSearch = SearchForFile();
+        if (fileResultFromSearch != null) {
+            return fileResultFromSearch;
         }
 
+        
         //File not found. Creating it
         try {
             Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
@@ -218,27 +216,80 @@ public class Requester {
 
             String encoded = Json.Default.encodeToString(VehicleAccess.Companion.serializer(), serverVehicleAccess);
 
-            // TODO: store securely
+            //TODO: store securely with password
             Files.write(pathAccessToken, encoded.getBytes(), StandardOpenOption.CREATE);
-
 
         } catch (InterruptedException | ExecutionException | IOException e) {
             throw new RuntimeException(e);
         }
 
-
-        //File not found. Creating it
-        // Create file
-
-        // Just to avoid error for now. DOES NOT EXIST
-        File file = new File("TEST");
+        
+        File file = fileResultFromSearch;
+        
+        // Response of file was not found, and had to be created.
         return file;
     }
+    
+    public File SearchForFile() {
+        String expectedFileName = vin + "_vehicleAccess.json";
+        // Check if vehicle access token is on file, create one if not
+        //Path filePath = Path.of( baseURI + vin + ".json");
+        File tokenDirectory = new File(baseURI);
+        File[] filesInDirectory = tokenDirectory.listFiles();
+        for (int i = 0; i < Objects.requireNonNull(filesInDirectory).length; i++) {
+            if (filesInDirectory[i].getName().equals(expectedFileName)) {
+                System.out.println("found file");
+                return filesInDirectory[i];
+            }
+        }
+        return null;
+    }
 
-    public void Case6() {
-        File file;
+
+    public void Telematics(File file) {
+        // read from file into VehicleAccess object
         String content = null;
-        file = FileChecker();
+        try {
+            content = new String(Files.readAllBytes(Path.of(file.toURI())));
+
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        VehicleAccess vehicleAccess = Json.Default.decodeFromString(VehicleAccess.Companion.serializer(), content);
+
+
+        Command getVechicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
+
+        TelematicsResponse telematicsResponse;
+        try {
+            telematicsResponse = hmkitFleet.sendCommand(getVechicleSpeed, vehicleAccess).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (telematicsResponse.getResponse() == null || telematicsResponse.getResponse().getStatus() != TelematicsCommandResponse.Status.OK) {
+            throw new RuntimeException("There was an error");
+        }
+
+        Command commandFromVehicle = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData());
+
+        if (commandFromVehicle instanceof Diagnostics.State) {
+            Diagnostics.State diagnostics = (Diagnostics.State) commandFromVehicle;
+            logger.info(format(
+                    "Got diagnostics response: %s",
+                    diagnostics.getSpeed().getValue().getValue()));
+        }
+
+
+
+
+    }
+
+
+}
+
+
         /*
         Path filePath = Path.of(file.toURI());
         System.out.println(filePath);
@@ -256,9 +307,6 @@ public class Requester {
         // TODO: store securely
         Files.write(baseURI, encoded.getBytes(), StandardOpenOption.CREATE);
 */
-
-    }
-
  /* if (!file.isFile()) {
             System.out.println("File does not exist");
             try {
@@ -274,7 +322,7 @@ public class Requester {
             System.out.println("File exists");
         }*/
 
-}
+
   /*
     // for mercedes benze
     ControlMeasure measure = new Odometer(110000, Odometer.Length.KILOMETERS);

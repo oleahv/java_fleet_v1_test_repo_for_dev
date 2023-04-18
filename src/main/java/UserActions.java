@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -25,7 +26,8 @@ public class UserActions {
                  3: Get vehicle access (WIP)\s
                  4: Delete car\s
                  5: Get clearance statuses of all cars\s
-                 6: Post request. Register car based on vin\
+                 6: Post request. Register car based on vin\s
+                 7: Send telematics command (speed)\
                 """);
 
         try {
@@ -74,8 +76,13 @@ public class UserActions {
                 break;
             case 6:
                 System.out.println("6: Post request. Register car based on vin");
-                requester.Case6();
+                requester.FileChecker();
                 break;
+            case 7:
+                System.out.println("Send telematics commands");
+                File file;
+                file = requester.FileChecker();
+                requester.Telematics(file);
             default:
                 System.out.println("Input error. Please only use single digit number");
                 break;

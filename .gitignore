@@ -1,4 +1,4 @@
 .idea
-src/main/java/accessTokens/vehicleAccess.json
+src/main/java/accessTokens/*
 .gradle
 build
