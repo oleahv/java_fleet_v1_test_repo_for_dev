@@ -1,12 +1,11 @@
-import com.highmobility.autoapi.Command;
-import com.highmobility.autoapi.CommandResolver;
-import com.highmobility.autoapi.Diagnostics;
+import com.highmobility.autoapi.*;
 import com.highmobility.hmkitfleet.HMKitFleet;
 import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
 import com.highmobility.hmkitfleet.model.*;
 import com.highmobility.hmkitfleet.network.Response;
 import com.highmobility.hmkitfleet.network.TelematicsCommandResponse;
 import com.highmobility.hmkitfleet.network.TelematicsResponse;
+import com.highmobility.value.Bytes;
 import kotlinx.serialization.json.Json;
 
 import java.io.File;
@@ -17,6 +16,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 import static java.lang.String.format;
@@ -29,8 +29,9 @@ public class Requester {
     String baseURI = "src/main/java/accessTokens";
 
 
+    // 1HMHLS5MF8GFR2DOE
     // Vin number of the vehicle. Can do asynch auth with a list (confirm)
-    String vin = "1HMHLS5MF8GFR2DOE";
+    String vin = "1HM2FORNG3EWOG91V";
     Brand CarBrand = Brand.SANDBOX;
     Path pathAccessToken = Paths.get(baseURI + "/" + vin + "_vehicleAccess.json");
 
@@ -41,11 +42,7 @@ public class Requester {
 
     HMKitFleet hmkitFleet = HMKitFleet.INSTANCE;
 
-
-    // Authenticate the user to HM with app. Sends a request to link the car with the app on HM. (Note, not instant)
-    // (might be intended form High Mobility)
-    public void ClientCertificate() {
-
+    public void InstanceHMKit() {
         // https://docs.high-mobility.com/guides/getting-started/fleet/
         ServiceAccountApiConfiguration configuration = new ServiceAccountApiConfiguration(
                 "4641e174-4134-44e0-a7ad-8b7110dddeb0",
@@ -57,6 +54,16 @@ public class Requester {
         );
         hmkitFleet.setEnvironment(HMKitFleet.Environment.SANDBOX);
         HMKitFleet.INSTANCE.setConfiguration(configuration);
+    }
+
+
+
+    // Authenticate the user to HM with app. Sends a request to link the car with the app on HM. (Note, not instant)
+    // (might be intended form High Mobility)
+    public void ClientCertificate() {
+
+        // https://docs.high-mobility.com/guides/getting-started/fleet/
+
 
         Response<RequestClearanceResponse> response =
                 null;
@@ -213,18 +220,18 @@ public class Requester {
             VehicleAccess serverVehicleAccess = accessResponse.getResponse();
             //System.out.println(serverVehicleAccess);
 
-
             String encoded = Json.Default.encodeToString(VehicleAccess.Companion.serializer(), serverVehicleAccess);
 
             //TODO: store securely with password
             Files.write(pathAccessToken, encoded.getBytes(), StandardOpenOption.CREATE);
+
 
         } catch (InterruptedException | ExecutionException | IOException e) {
             throw new RuntimeException(e);
         }
 
         
-        File file = fileResultFromSearch;
+        File file = SearchForFile();
         
         // Response of file was not found, and had to be created.
         return file;
@@ -257,28 +264,45 @@ public class Requester {
             throw new RuntimeException(e);
         }
         VehicleAccess vehicleAccess = Json.Default.decodeFromString(VehicleAccess.Companion.serializer(), content);
+        //System.out.println(vehicleAccess);
 
+        //Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
+        Command getVehicleSpeed = new Diagnostics.GetState();
 
-        Command getVechicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
 
         TelematicsResponse telematicsResponse;
         try {
-            telematicsResponse = hmkitFleet.sendCommand(getVechicleSpeed, vehicleAccess).get();
+
+            telematicsResponse = hmkitFleet.sendCommand(getVehicleSpeed, vehicleAccess).get();
+            //telematicsResponse = hmkitFleet.sendCommand(new Bytes(getVechicleSpeedCommand), vehicleAccess).get();
+
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
+        logger.info(format("Got telematics response: %s - %s", telematicsResponse.getResponse(), telematicsResponse.getErrors()));
 
         if (telematicsResponse.getResponse() == null || telematicsResponse.getResponse().getStatus() != TelematicsCommandResponse.Status.OK) {
             throw new RuntimeException("There was an error");
         }
 
+
         Command commandFromVehicle = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData());
+
+
+
+
+
 
         if (commandFromVehicle instanceof Diagnostics.State) {
             Diagnostics.State diagnostics = (Diagnostics.State) commandFromVehicle;
-            logger.info(format(
-                    "Got diagnostics response: %s",
-                    diagnostics.getSpeed().getValue().getValue()));
+            if (diagnostics.getSpeed().getValue() != null) {
+                logger.info(format(
+                        "Got diagnostics response: %s",
+                        //diagnostics.getSpeed().getValue()));
+                        diagnostics.getSpeed().getValue().getValue()));
+            } else {
+                logger.info(format(" > diagnostics.bytes: %s", diagnostics));
+            }
         }
 
 

@@ -3,6 +3,8 @@ import static java.lang.System.exit;
 public class Main {
     public static void main(String[] args) {
         UserActions userActions = new UserActions();
+        Requester requester = new Requester();
+        requester.InstanceHMKit();
         // Read filenumber and brand from a file.
 
         // TODO: Read vin and brand from csv file (NOTE: odometer for sandbox and mercedes-benz)
