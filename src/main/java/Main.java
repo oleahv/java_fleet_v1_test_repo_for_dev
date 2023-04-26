@@ -1,7 +1,13 @@
+import server.HttpMethods;
+
+
 import static java.lang.System.exit;
 
 public class Main {
     public static void main(String[] args) {
+        /*server.HttpMethods httpMethods = new HttpMethods();
+        httpMethods.CreateServer();*/
+
         UserActions userActions = new UserActions();
         Requester requester = new Requester();
         requester.InstanceHMKit();
@@ -13,17 +19,11 @@ public class Main {
         while(!stopLoopFlag) {
             stopLoopFlag = userActions.DetermineActionBasedOnUserInputFromTerminal();
         }
+
+       // WebServer webServer = new WebServer(requester.vin);
         // Used for exiting the application, as there seems to be threads running from hmkit
         exit(0);
 
 
-       /* System.out.println("Hello world!");
-        Requester requester = new Requester();
-        HandlerJWT handlerJWT = new HandlerJWT();
-        //handlerJWT.CreateJWT();
-        requester.Test1Func();
-        System.out.println("T1, done");
-        String res2 = requester.Test2Func();
-        System.out.println(res2); */
     }
 }

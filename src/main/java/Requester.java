@@ -5,7 +5,6 @@ import com.highmobility.hmkitfleet.model.*;
 import com.highmobility.hmkitfleet.network.Response;
 import com.highmobility.hmkitfleet.network.TelematicsCommandResponse;
 import com.highmobility.hmkitfleet.network.TelematicsResponse;
-import com.highmobility.value.Bytes;
 import kotlinx.serialization.json.Json;
 
 import java.io.File;
@@ -16,9 +15,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
+
 import static java.lang.String.format;
 
 public class Requester {
@@ -40,6 +39,7 @@ public class Requester {
 
     // https://github.com/highmobility/hmkit-fleet-consumer/blob/main/hmkit-fleet-consumer/src/main/java/WebServer.java
 
+    
     HMKitFleet hmkitFleet = HMKitFleet.INSTANCE;
 
     public void InstanceHMKit() {
@@ -210,6 +210,7 @@ public class Requester {
     public File FileChecker() {
         File fileResultFromSearch = SearchForFile();
         if (fileResultFromSearch != null) {
+            System.out.println("found file without creation");
             return fileResultFromSearch;
         }
 
@@ -240,7 +241,6 @@ public class Requester {
     public File SearchForFile() {
         String expectedFileName = vin + "_vehicleAccess.json";
         // Check if vehicle access token is on file, create one if not
-        //Path filePath = Path.of( baseURI + vin + ".json");
         File tokenDirectory = new File(baseURI);
         File[] filesInDirectory = tokenDirectory.listFiles();
         for (int i = 0; i < Objects.requireNonNull(filesInDirectory).length; i++) {
@@ -263,16 +263,20 @@ public class Requester {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+
+       // System.out.println(":::::::::::::" + hmkitFleet.getVehicleAccess(vin));
+
         VehicleAccess vehicleAccess = Json.Default.decodeFromString(VehicleAccess.Companion.serializer(), content);
         //System.out.println(vehicleAccess);
 
-        //Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
-        Command getVehicleSpeed = new Diagnostics.GetState();
+        Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
+        //Command getVehicleSpeed = new Diagnostics.GetState();
 
 
         TelematicsResponse telematicsResponse;
         try {
-
+            // Sends command to the car (Get request)
             telematicsResponse = hmkitFleet.sendCommand(getVehicleSpeed, vehicleAccess).get();
             //telematicsResponse = hmkitFleet.sendCommand(new Bytes(getVechicleSpeedCommand), vehicleAccess).get();
 
@@ -285,9 +289,8 @@ public class Requester {
             throw new RuntimeException("There was an error");
         }
 
-
         Command commandFromVehicle = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData());
-
+        //int calue_t = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData()).getCommandType();
 
 
 
@@ -295,6 +298,8 @@ public class Requester {
 
         if (commandFromVehicle instanceof Diagnostics.State) {
             Diagnostics.State diagnostics = (Diagnostics.State) commandFromVehicle;
+            //String stringText = new String(diagnostics.getByteArray());
+            System.out.println(diagnostics.getSpeed());
             if (diagnostics.getSpeed().getValue() != null) {
                 logger.info(format(
                         "Got diagnostics response: %s",
@@ -304,6 +309,19 @@ public class Requester {
                 logger.info(format(" > diagnostics.bytes: %s", diagnostics));
             }
         }
+        else if (commandFromVehicle instanceof FailureMessage.State) {
+            FailureMessage.State failure = (FailureMessage.State) commandFromVehicle;
+            if (failure.getFailedMessageID().getValue() == Identifier.VEHICLE_STATUS &&
+                    failure.getFailedMessageType().getValue() == Type.GET) {
+                // The Get Vehicle Status command failed.
+                if (failure.getFailureReason().getValue() == FailureMessage.FailureReason.UNAUTHORISED) {
+                    // The command failed because the vehicle is not authorized. Try to connect
+                    // to vehicle again
+                }
+            }
+        }
+
+
 
 
 

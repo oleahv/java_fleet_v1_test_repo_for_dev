@@ -1,0 +1,22 @@
+To use High Mobility's Fleet Management SDK, you will need to implement the OAuth 2.0 protocol to obtain an access token. Here are the general steps to implement the OAuth flow:
+
+Register your application on High Mobility's developer portal to obtain a client ID and client secret.
+
+Redirect the user to High Mobility's authorization endpoint with the following query parameters:
+
+client_id: Your client ID obtained from the developer portal.
+response_type: The response type should be set to code.
+redirect_uri: The redirect URI to which the user will be redirected after authorization. This URI should be registered in your application settings.
+scope: The scopes required for your application.
+After the user grants permission, High Mobility will redirect the user back to the redirect URI with an authorization code.
+
+Exchange the authorization code for an access token by sending a POST request to High Mobility's token endpoint with the following parameters:
+
+grant_type: The grant type should be set to authorization_code.
+client_id: Your client ID obtained from the developer portal.
+client_secret: Your client secret obtained from the developer portal.
+code: The authorization code obtained in step 3.
+redirect_uri: The redirect URI used in step 2.
+High Mobility will respond with an access token, which can be used to authenticate requests to their APIs.
+
+Please note that the exact implementation details may vary depending on your programming language and the OAuth library you are using. It is recommended to consult the High Mobility documentation and OAuth specifications for detailed information on implementing the OAuth flow.
