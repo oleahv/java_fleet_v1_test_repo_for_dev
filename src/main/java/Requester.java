@@ -40,11 +40,10 @@ public class Requester {
 
     // 1HMHLS5MF8GFR2DOE
     // Vin number of the vehicle. Can do asynch auth with a list (confirm)
-    String vin = credentials.getVin();
-    Brand CarBrand = credentials.getCarBrand();
+
 
     // Path to where the accessToken is stored as a .json file
-    Path pathAccessToken = Paths.get(baseURI + "/" + vin + "_vehicleAccess.json");
+    Path pathAccessToken = Paths.get(baseURI + "/" + credentials.getVin() + "_vehicleAccess.json");
 
     Logger logger = Logger.getLogger("LoggerTest1");
 
@@ -57,14 +56,22 @@ public class Requester {
     public void InstanceHMKit() {
         // https://docs.high-mobility.com/guides/getting-started/fleet/
         ServiceAccountApiConfiguration configuration = new ServiceAccountApiConfiguration(
-                "4641e174-4134-44e0-a7ad-8b7110dddeb0",
+                credentials.getServiceAccountAPIkey(),
+                credentials.getServiceAccountPrivateKey(),
+                credentials.getClientCertificate(),
+                credentials.getClientPrivateKey(),
+                credentials.getOauthClientId(),
+                credentials.getoAuthClientSecret()
+
+                /*"4641e174-4134-44e0-a7ad-8b7110dddeb0",
                 "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgE76M1h3vVMe0qX8i\ngVxXT61MzKsXag4EeBp0LT0hnsmhRANCAASX/N2hmY9Y55zEboEGlyVCr/5YZ7BK\\nyeh8zs/MFmTaUWQUfcV1BleFsCmkg6AuAYYHUUHFpf69i8dhOHI2rjSf\n-----END PRIVATE KEY-----",
                 "c2JveJwx7g2/p85JCq/pUSLiz/aXJv0Ge4+D8bmi1igcIP82CFkmPkwPK3ZUPcFBZ7Oxs4q7TmuM9RkFVrGvZfHkkWCp1HyydPNzgnjOFRmRaYf5uXqthRLnIoiHA1mUuF/ZZGWvKzahOSLfwErpFzkO6soV1SRL2BtzrUxI1kHK5XmNR/0CBZ7ksK23zG22OsRrObdRTo0W",
                 "+MEim4mx4J89ML6+wNkgwR9oaUyTvwDsiMZ3J7RKn2c=",
                 "53ea2ef0-8fbc-4b98-b3b7-edbafebe5ca4",
-                "GgmBzs2Lo9UKGcnc6ftuAg0AzzQ63OYE"
+                "GgmBzs2Lo9UKGcnc6ftuAg0AzzQ63OYE"*/
+
         );
-        hmkitFleet.setEnvironment(HMKitFleet.Environment.SANDBOX);
+        hmkitFleet.setEnvironment(credentials.getEnvironment());
         HMKitFleet.INSTANCE.setConfiguration(configuration);
 
     }
@@ -82,7 +89,7 @@ public class Requester {
                 null;
         // LEGG TIL MERZEDES-BENZ VERDIER SOM TRENGS. Se nederst i kommentert ut kode.
         try {
-            response = hmkitFleet.requestClearance(vin, CarBrand, measures).get();
+            response = hmkitFleet.requestClearance(credentials.getVin(), credentials.getCarBrand(), measures).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
@@ -188,7 +195,7 @@ public class Requester {
     public void DeleteClearance() {
         Response<RequestClearanceResponse> response = null;
         try {
-            response = hmkitFleet.deleteClearance(vin).get();
+            response = hmkitFleet.deleteClearance(credentials.getVin()).get();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
@@ -202,22 +209,25 @@ public class Requester {
 
     }
 
-    public void GetEligibility() {
+    public boolean GetEligibility() {
         Response<EligibilityStatus> response = null;
         try {
-            response = hmkitFleet.getEligibility(vin, Brand.SANDBOX).get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
+            response = hmkitFleet.getEligibility(credentials.getVin(), credentials.getCarBrand()).get();
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
 
         if (response.getResponse() != null) {
             logger.info(format("getEligibility response: %s", response.getResponse()));
+            // If the car is eligible, return true to signal that it should continue with registration
+            if (response.getResponse().getEligible()) {
+                return true;
+            }
         } else {
             logger.info(format("getEligibility error: %s", response.getError().getTitle()));
         }
 
+        return false;
     }
 
     // Historical
@@ -225,9 +235,7 @@ public class Requester {
         Response<List<ClearanceStatus>> response = null;
         try {
             response = hmkitFleet.getClearanceStatuses().get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
 
@@ -256,7 +264,7 @@ public class Requester {
         
         //File not found. Creating it
         try {
-            Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
+            Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(credentials.getVin()).get();
             if (accessResponse.getError() != null) {
                 throw new RuntimeException(accessResponse.getError().getDetail());
             }
@@ -283,7 +291,7 @@ public class Requester {
     }
     
     public File SearchForFile() {
-        String expectedFileName = vin + "_vehicleAccess.json";
+        String expectedFileName = credentials.getVin() + "_vehicleAccess.json";
         // Check if vehicle access token is on file, create one if not
         File tokenDirectory = new File(baseURI);
         File[] filesInDirectory = tokenDirectory.listFiles();

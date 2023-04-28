@@ -41,7 +41,6 @@ public class UserActions {
     }
 
 
-
     public boolean DetermineActionBasedOnUserInputFromTerminal() {
         int inputValue = ReadUserInputFromTerminal();
         switch(inputValue) {
@@ -51,8 +50,13 @@ public class UserActions {
                 return true;
             case 1:
                 System.out.println("1: Auth");
-                DoCase1();
-                requester.GetEligibility();
+                boolean carIsEligible = requester.GetEligibility();
+                if (carIsEligible) {
+                    DoCase1();
+                } else {
+                    System.out.println("The car is not eligible, and can ergo not be added");
+                }
+                //requester.GetEligibility();
                 break;
             case 2:
                 System.out.println("2: Get clearance status");
