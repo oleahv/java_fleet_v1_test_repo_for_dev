@@ -1,5 +1,6 @@
 package server;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
@@ -16,7 +17,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Base64;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 
@@ -30,7 +34,9 @@ public class WebServer {
     private static final String CLIENT_SECRET = "GgmBzs2Lo9UKGcnc6ftuAg0AzzQ63OYE";
 
     // The URL to High Mobility's authorization endpoint
-    private static final String AUTHORIZATION_ENDPOINT = "https://api.high-mobility.com/v1/oauth/authorize";
+    //private static final String AUTHORIZATION_ENDPOINT = "https://api.high-mobility.com/v1/oauth/authorize";
+    private static final String AUTHORIZATION_ENDPOINT = "https://sandbox.owner-panel.high-mobility.com/oauth/new";
+
 
     // The redirect URI that you registered with High Mobility when you created your client ID and secret
     private static final String REDIRECT_URI = "http://localhost:8080/callback";
@@ -39,8 +45,9 @@ public class WebServer {
 
 
     public static void main(String[] args) throws Exception {
+        // TODO: &scope=hm.fleets.manage
         // Step 1: Redirect the user to High Mobility's authorization endpoint to request permission for your application to access their resources
-        String authorizationUrl = AUTHORIZATION_ENDPOINT + "?client_id=" + CLIENT_ID + "&redirect_uri=" + REDIRECT_URI + "&response_type=code";
+        String authorizationUrl = AUTHORIZATION_ENDPOINT + "?client_id=" + CLIENT_ID + "&redirect_uri=" + REDIRECT_URI + "&response_type=code&scope=hm.fleets.manage";
         System.out.println("Please visit this URL to authorize your application: " + authorizationUrl);
 
         // Step 2: Implement web server to handle incoming requests on the redirect URI
@@ -54,7 +61,7 @@ public class WebServer {
                 // Step 3: Exchange authorization code for access token using High Mobility's token endpoint
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://api.high-mobility.com/v1/oauth/token"))
+                        .uri(URI.create("https://sandbox.api.high-mobility.com/v1/access_tokens"))
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString("grant_type=authorization_code&code=" + authorizationCode + "&redirect_uri=" + REDIRECT_URI))
                         .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((CLIENT_ID + ":" + CLIENT_SECRET).getBytes()))
@@ -78,10 +85,20 @@ public class WebServer {
 
         try {
             File file = new File("src/main/java/accessTokens/" + vin + "_vehicleAccess.json");
-            // TODO: FIX later
-            JsonParser parser = new JsonParser();
-            JsonObject jsonObject = parser.parse(new FileReader(file)).getAsJsonObject();
-            accessToken = jsonObject.get("access_token").getAsString();
+            String jsonContent = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+            JsonObject jsonObject = JsonParser.parseString(jsonContent).getAsJsonObject();
+            JsonObject accessJsonObject = jsonObject.get("accessToken").getAsJsonObject();
+            //JsonObject jsonObject = parser.parse(new FileReader(file)).getAsJsonObject();
+
+            accessToken = accessJsonObject.get("access_token").getAsString();
+
+  /*          JsonObject jsonObject = parser.parse(new FileReader(file)).getAsJsonObject();
+            JsonObject mutableJsonObject = new JsonObject();
+            for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                mutableJsonObject.add(entry.getKey(), entry.getValue());
+            }
+            accessToken = mutableJsonObject.get("accessToken").getAsString();
+*/
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

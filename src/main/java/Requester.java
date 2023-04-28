@@ -1,3 +1,4 @@
+import LoginInfo.Credentials;
 import com.highmobility.autoapi.*;
 import com.highmobility.hmkitfleet.HMKitFleet;
 import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
@@ -9,10 +10,16 @@ import kotlinx.serialization.json.Json;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -20,7 +27,10 @@ import java.util.logging.Logger;
 
 import static java.lang.String.format;
 
+
 public class Requester {
+
+    Credentials credentials = new Credentials();
     ControlMeasure measure = new Odometer(110000, Odometer.Length.KILOMETERS);
     List<ControlMeasure> measures = List.of(measure);
 
@@ -30,8 +40,10 @@ public class Requester {
 
     // 1HMHLS5MF8GFR2DOE
     // Vin number of the vehicle. Can do asynch auth with a list (confirm)
-    String vin = "1HM2FORNG3EWOG91V";
-    Brand CarBrand = Brand.SANDBOX;
+    String vin = credentials.getVin();
+    Brand CarBrand = credentials.getCarBrand();
+
+    // Path to where the accessToken is stored as a .json file
     Path pathAccessToken = Paths.get(baseURI + "/" + vin + "_vehicleAccess.json");
 
     Logger logger = Logger.getLogger("LoggerTest1");
@@ -39,7 +51,7 @@ public class Requester {
 
     // https://github.com/highmobility/hmkit-fleet-consumer/blob/main/hmkit-fleet-consumer/src/main/java/WebServer.java
 
-    
+
     HMKitFleet hmkitFleet = HMKitFleet.INSTANCE;
 
     public void InstanceHMKit() {
@@ -54,6 +66,7 @@ public class Requester {
         );
         hmkitFleet.setEnvironment(HMKitFleet.Environment.SANDBOX);
         HMKitFleet.INSTANCE.setConfiguration(configuration);
+
     }
 
 
@@ -105,9 +118,11 @@ public class Requester {
         if (response.getResponse() != null) {
             logger.info(format("getClearanceStatuses response"));
             for (ClearanceStatus status : response.getResponse()) {
-                logger.info(format("status: %s:%s",
-                        status.getVin(),
-                        status.getStatus()));
+                if (status.getVin().equals(credentials.getVin())) {
+                    logger.info(format("status: %s:%s",
+                            status.getVin(),
+                            status.getStatus()));
+                }
             }
         } else {
             logger.info(format("getClearanceStatuses error: %s", response.getError().getTitle()));
@@ -141,8 +156,32 @@ public class Requester {
     */
 
 
-    public void Case3() {
+    public void GetAccessToken() {
+        String apiKey = "4641e174-4134-44e0-a7ad-8b7110dddeb0";
+        String apiSecret = "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg+MEim4mx4J89ML6+\nwNkgwR9oaUyTvwDsiMZ3J7RKn2ehRANCAASPg/G5otYoHCD/NghZJj5MDyt2VD3B\nQWezsbOKu05rjPUZBVaxr2Xx5JFgqdR8snTzc4J4zhUZkWmH+bl6rYUS\n-----END PRIVATE KEY-----\n\n";
 
+
+        String encodedCredentials = Base64.getEncoder()
+                .encodeToString((apiKey + ":" + apiSecret).getBytes(StandardCharsets.UTF_8));
+
+        HttpClient client = HttpClient.newHttpClient();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://fleet.high-mobility.com/v1/oauth2/token"))
+                .header("Authorization", "Basic " + encodedCredentials)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString("grant_type=client_credentials"))
+                .build();
+
+        HttpResponse<String> response = null;
+        try {
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        String accessToken = response.body();
+
+        System.out.println(accessToken);
 
     }
 
@@ -218,8 +257,13 @@ public class Requester {
         //File not found. Creating it
         try {
             Response<VehicleAccess> accessResponse = hmkitFleet.getVehicleAccess(vin).get();
+            if (accessResponse.getError() != null) {
+                throw new RuntimeException(accessResponse.getError().getDetail());
+            }
+
+
             VehicleAccess serverVehicleAccess = accessResponse.getResponse();
-            //System.out.println(serverVehicleAccess);
+            System.out.println(serverVehicleAccess);
 
             String encoded = Json.Default.encodeToString(VehicleAccess.Companion.serializer(), serverVehicleAccess);
 
@@ -299,7 +343,7 @@ public class Requester {
         if (commandFromVehicle instanceof Diagnostics.State) {
             Diagnostics.State diagnostics = (Diagnostics.State) commandFromVehicle;
             //String stringText = new String(diagnostics.getByteArray());
-            System.out.println(diagnostics.getSpeed());
+            System.out.println(diagnostics.getSpeed().getValue());
             if (diagnostics.getSpeed().getValue() != null) {
                 logger.info(format(
                         "Got diagnostics response: %s",

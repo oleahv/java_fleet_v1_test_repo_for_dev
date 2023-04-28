@@ -63,8 +63,8 @@ public class UserActions {
                 break;
             case 3:
                 // NOTE: persistent, so store securely
-                System.out.println("3: Get vehicle access (WIP)");
-                requester.Case3();
+                System.out.println("3: Get vehicle access token (WIP)");
+                requester.GetAccessToken();
                 break;
             case 4:
                 System.out.println("4: Delete car");
