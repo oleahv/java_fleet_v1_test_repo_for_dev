@@ -10,11 +10,16 @@ public class Credentials {
 
     // Determiner if the application is in production or sandbox
     private final HMKitFleet.Environment environment = HMKitFleet.Environment.SANDBOX;
-    private static final String vin = "1HM2FORNG3EWOG91V";
+
+    //private static final String vin = "1HM2FORNG3EWOG91V";
+    private static final String vin = "1HMYNRLK4VS94MJRP";
+
     private static final Brand carBrand = Brand.SANDBOX;
 
     private static final String serviceAccountAPIkey = "4641e174-4134-44e0-a7ad-8b7110dddeb0";
-    private static final String serviceAccountPrivateKey = "-----BEGIN PRIVATE KEY-----\\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgk7TZBUOiwL5vbj9n\\nr9ezG5BqQckFzSE6YqaArmVZfgChRANCAAT1mGPGkPxnrd1FVYe61CheAWMUh6o9\\nZ/PtLeYaRMROPDqHwPXYGl1HBMv2+FhyKBAHdr3s1EgHXoP5dZppxhnJ\\n-----END PRIVATE KEY-----";
+
+    // Be careful when pasting the key. Can cause issues when "\" is involved
+    private static final String serviceAccountPrivateKey = "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgE76M1h3vVMe0qX8i\ngVxXT61MzKsXag4EeBp0LT0hnsmhRANCAASX/N2hmY9Y55zEboEGlyVCr/5YZ7BK\\nyeh8zs/MFmTaUWQUfcV1BleFsCmkg6AuAYYHUUHFpf69i8dhOHI2rjSf\n-----END PRIVATE KEY-----";
     private static final String clientCertificate = "c2JveJwx7g2/p85JCq/pUSLiz/aXJv0Ge4+D8bmi1igcIP82CFkmPkwPK3ZUPcFBZ7Oxs4q7TmuM9RkFVrGvZfHkkWCp1HyydPNzgnjOFRmRaYf5uXqthRLnIoiHA1mUuF/ZZGWvKzahOSLfwErpFzkO6soV1SRL2BtzrUxI1kHK5XmNR/0CBZ7ksK23zG22OsRrObdRTo0W";
     private static final String clientPrivateKey = "+MEim4mx4J89ML6+wNkgwR9oaUyTvwDsiMZ3J7RKn2c=";
     private static final String oauthClientId = "53ea2ef0-8fbc-4b98-b3b7-edbafebe5ca4";
@@ -23,6 +28,8 @@ public class Credentials {
     // URI that the user can enter into a browser to start the Oauth flow
     private final String REDIRECT_URI = "http://localhost:8080/callback";
 
+
+    // https://sandbox.api.high-mobility.com/v1
 
     // URI to connect to. Sandbox is for the testing environment
     private String DeterminEnvironment() {

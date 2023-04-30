@@ -116,9 +116,7 @@ public class Requester {
         Response<List<ClearanceStatus>> response = null;
         try {
             response = hmkitFleet.getClearanceStatuses().get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
 
