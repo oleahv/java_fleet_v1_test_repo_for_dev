@@ -52,6 +52,8 @@ public class WebServer {
         Credentials credentials = new Credentials();
         // TODO: &scope=hm.fleets.manage
         // Step 1: Redirect the user to High Mobility's authorization endpoint to request permission for your application to access their resources
+       // https://sandbox.owner-panel.high-mobility.com/hm_cloud/o/bb8545d7-22bd-4bbc-b3e4-58a84a5328ac/oauth?app_id=50A018C136CF9BB7CE539590&client_id=e52b2864-7611-4f26-94e4-d13f7039f25d&redirect_uri=http%3A%2F%2Fhm-postman.local
+
         String authorizationUrl = credentials.getAUTHORIZATION_ENDPOINT() + "?client_id=" + credentials.getOauthClientId() + "&redirect_uri=" + credentials.getREDIRECT_URI() + "&response_type=code&scope=hm.fleets.manage";
         System.out.println("Please visit this URL to authorize your application: " + authorizationUrl);
 
@@ -108,7 +110,7 @@ public class WebServer {
             e.printStackTrace();
         }
 
-        // Example request to get list of vehicles
+        /*// Example request to get list of vehicles
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 //.uri(URI.create("https://api.high-mobility.com/v1/fleet/vehicles"))
@@ -120,5 +122,7 @@ public class WebServer {
         futureResponse.thenApply(HttpResponse::body)
                 .thenAccept(System.out::println)
                 .join();
+
+         */
     }
 }

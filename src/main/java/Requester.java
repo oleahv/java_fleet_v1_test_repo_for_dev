@@ -1,11 +1,13 @@
 import LoginInfo.Credentials;
 import com.highmobility.autoapi.*;
+import com.highmobility.autoapi.value.measurement.Speed;
 import com.highmobility.hmkitfleet.HMKitFleet;
 import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
 import com.highmobility.hmkitfleet.model.*;
 import com.highmobility.hmkitfleet.network.Response;
 import com.highmobility.hmkitfleet.network.TelematicsCommandResponse;
 import com.highmobility.hmkitfleet.network.TelematicsResponse;
+import com.highmobility.value.Bytes;
 import kotlinx.serialization.json.Json;
 
 import java.io.File;
@@ -31,7 +33,7 @@ import static java.lang.String.format;
 public class Requester {
 
     Credentials credentials = new Credentials();
-    ControlMeasure measure = new Odometer(110000, Odometer.Length.KILOMETERS);
+    ControlMeasure measure = new Odometer(2050, Odometer.Length.KILOMETERS);
     List<ControlMeasure> measures = List.of(measure);
 
     // Path to directory that stores json files (access tokens)
@@ -52,9 +54,25 @@ public class Requester {
 
 
     HMKitFleet hmkitFleet = HMKitFleet.INSTANCE;
+/*
 
+ServiceAccountApiConfiguration configuration = new ServiceAccountApiConfiguration(
+    "", // Add Service Account API Key here
+    "", // Add Service Account Private Key here
+    "eHZobb7vxXQcyCNIdIx2zN9jA1nGIeCVKz24xgZZ6/C/JD8VmbbYVM9zo3SOVaJupg49hihLez4PlvF/pvGai+D8nKUHIb7HjEc5uuhEpBESG02lyi5Q4B5CTaJz3ydI6u8nYANKUS27KsOWVeeoltxy/fpS8DCWH5nP1HLJmn06sVG2b/7F+AeN69cRbxUFPTsCgPoBMXbm",
+    "rcU6lKuV2bL1SQVjjjIeLKFMcbEfpRfITmgKfV7LdBg=",
+    "", // Add OAuth2 Client ID here
+    ""  // Add OAuth2 Client Secret here
+
+    eHZobb7vxXQcyCNIdIx2zN9jA1nGIeCVKz24xgZZ6/C/JD8VmbbYVM9zo3SOVaJupg49hihLez4PlvF/pvGai+D8nKUHIb7HjEc5uuhEpBESG02lyi5Q4B5CTaJz3ydI6u8nYANKUS27KsOWVeeoltxy/fpS8DCWH5nP1HLJmn06sVG2b/7F+AeN69cRbxUFPTsCgPoBMXbm",
+    "rcU6lKuV2bL1SQVjjjIeLKFMcbEfpRfITmgKfV7LdBg=
+);
+HMKitFleet.INSTANCE.setConfiguration(configuration);
+
+ */
     public void InstanceHMKit() {
         // https://docs.high-mobility.com/guides/getting-started/fleet/
+        //TODO: seems like there is an error here..?
         ServiceAccountApiConfiguration configuration = new ServiceAccountApiConfiguration(
                 credentials.getServiceAccountAPIkey(),
                 credentials.getServiceAccountPrivateKey(),
@@ -72,6 +90,7 @@ public class Requester {
 
         );
         hmkitFleet.setEnvironment(credentials.getEnvironment());
+        System.out.println(configuration);
         HMKitFleet.INSTANCE.setConfiguration(configuration);
 
     }
@@ -230,6 +249,8 @@ public class Requester {
 
     // Historical
     public void GetClearanceStatusesOfAllCars() {
+
+
         Response<List<ClearanceStatus>> response = null;
         try {
             response = hmkitFleet.getClearanceStatuses().get();
@@ -266,6 +287,7 @@ public class Requester {
             if (accessResponse.getError() != null) {
                 throw new RuntimeException(accessResponse.getError().getDetail());
             }
+            //System.out.println(" DDDD::::::::::::" + accessResponse.getResponse().getAccessToken().getAccessToken());
 
 
             VehicleAccess serverVehicleAccess = accessResponse.getResponse();
@@ -308,20 +330,33 @@ public class Requester {
         String content = null;
         try {
             content = new String(Files.readAllBytes(Path.of(file.toURI())));
-
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
 
-       // System.out.println(":::::::::::::" + hmkitFleet.getVehicleAccess(vin));
-
         VehicleAccess vehicleAccess = Json.Default.decodeFromString(VehicleAccess.Companion.serializer(), content);
-        //System.out.println(vehicleAccess);
 
         Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
+        //Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_OEM_TROUBLE_CODE_VALUES);
+
+
+        //Bytes getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
+
+
         //Command getVehicleSpeed = new Diagnostics.GetState();
+
+
+        /*
+        Response<VehicleAccess> vehicleAccessResponse2;
+        try {
+            vehicleAccessResponse2 = hmkitFleet.getVehicleAccess(credentials.getVin()).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }*/
+
+        Diagnostics.State diagnostics;
+
 
 
         TelematicsResponse telematicsResponse;
@@ -339,6 +374,7 @@ public class Requester {
             throw new RuntimeException("There was an error");
         }
 
+
         Command commandFromVehicle = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData());
         //int calue_t = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData()).getCommandType();
 
@@ -347,18 +383,20 @@ public class Requester {
 
 
         if (commandFromVehicle instanceof Diagnostics.State) {
-            Diagnostics.State diagnostics = (Diagnostics.State) commandFromVehicle;
+            diagnostics = (Diagnostics.State) commandFromVehicle;
             //String stringText = new String(diagnostics.getByteArray());
             System.out.println(diagnostics.getSpeed().getValue());
             if (diagnostics.getSpeed().getValue() != null) {
                 logger.info(format(
                         "Got diagnostics response: %s",
-                        //diagnostics.getSpeed().getValue()));
-                        diagnostics.getSpeed().getValue().getValue()));
+                        diagnostics.getOemTroubleCodeValues()));
+                System.out.println(diagnostics.getOemTroubleCodeValues());
+                        //diagnostics.getSpeed().getValue().getValue()));
             } else {
                 logger.info(format(" > diagnostics.bytes: %s", diagnostics));
             }
         }
+
         else if (commandFromVehicle instanceof FailureMessage.State) {
             FailureMessage.State failure = (FailureMessage.State) commandFromVehicle;
             if (failure.getFailedMessageID().getValue() == Identifier.VEHICLE_STATUS &&
