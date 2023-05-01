@@ -41,6 +41,7 @@ public class UserActions {
     }
 
 
+    // Switch. User can select action from options given
     public boolean DetermineActionBasedOnUserInputFromTerminal() {
         int inputValue = ReadUserInputFromTerminal();
         switch(inputValue) {
@@ -87,8 +88,9 @@ public class UserActions {
                 File file;
                 file = requester.FileChecker();
                 requester.Telematics(file);
+                break;
             default:
-                System.out.println("Input error. Please only use single digit number");
+                System.out.println("Input error. Please only use a single digit number");
                 break;
         }
         return false;

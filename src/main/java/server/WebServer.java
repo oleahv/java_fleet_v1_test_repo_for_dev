@@ -47,8 +47,7 @@ public class WebServer {
 */
 
 
-
-    public static void main(String[] args) throws Exception {
+        public void RunWebServer() {
         Credentials credentials = new Credentials();
         // TODO: &scope=hm.fleets.manage
         // Step 1: Redirect the user to High Mobility's authorization endpoint to request permission for your application to access their resources
@@ -58,8 +57,13 @@ public class WebServer {
         System.out.println("Please visit this URL to authorize your application: " + authorizationUrl);
 
         // Step 2: Implement web server to handle incoming requests on the redirect URI
-        HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
-        server.createContext("/callback", new HttpHandler() {
+            HttpServer server = null;
+            try {
+                server = HttpServer.create(new InetSocketAddress(8080), 0);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            server.createContext("/callback", new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 String query = exchange.getRequestURI().getQuery();
@@ -108,6 +112,8 @@ public class WebServer {
 */
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         /*// Example request to get list of vehicles

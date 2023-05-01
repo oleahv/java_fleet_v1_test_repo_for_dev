@@ -1,6 +1,6 @@
 import LoginInfo.Credentials;
 import com.highmobility.autoapi.*;
-import com.highmobility.autoapi.value.measurement.Speed;
+import com.highmobility.autoapi.value.Brand;
 import com.highmobility.hmkitfleet.HMKitFleet;
 import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
 import com.highmobility.hmkitfleet.model.*;
@@ -9,6 +9,8 @@ import com.highmobility.hmkitfleet.network.TelematicsCommandResponse;
 import com.highmobility.hmkitfleet.network.TelematicsResponse;
 import com.highmobility.value.Bytes;
 import kotlinx.serialization.json.Json;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,12 +27,12 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
 
 import static java.lang.String.format;
 
 
 public class Requester {
+
 
     Credentials credentials = new Credentials();
     ControlMeasure measure = new Odometer(2050, Odometer.Length.KILOMETERS);
@@ -47,7 +49,8 @@ public class Requester {
     // Path to where the accessToken is stored as a .json file
     Path pathAccessToken = Paths.get(baseURI + "/" + credentials.getVin() + "_vehicleAccess.json");
 
-    Logger logger = Logger.getLogger("LoggerTest1");
+    //final Logger logger = Logger.getLogger("LoggerTest1");
+    final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 
     // https://github.com/highmobility/hmkit-fleet-consumer/blob/main/hmkit-fleet-consumer/src/main/java/WebServer.java
@@ -89,9 +92,11 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
                 "GgmBzs2Lo9UKGcnc6ftuAg0AzzQ63OYE"*/
 
         );
+        hmkitFleet.setConfiguration(configuration);
         hmkitFleet.setEnvironment(credentials.getEnvironment());
-        System.out.println(configuration);
-        HMKitFleet.INSTANCE.setConfiguration(configuration);
+        //HMKitFleet.INSTANCE.setConfiguration(configuration);
+
+
 
     }
 
@@ -337,7 +342,9 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
 
         VehicleAccess vehicleAccess = Json.Default.decodeFromString(VehicleAccess.Companion.serializer(), content);
 
-        Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
+        Bytes getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
+       
+
         //Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_OEM_TROUBLE_CODE_VALUES);
 
 
@@ -390,7 +397,6 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
                 logger.info(format(
                         "Got diagnostics response: %s",
                         diagnostics.getOemTroubleCodeValues()));
-                System.out.println(diagnostics.getOemTroubleCodeValues());
                         //diagnostics.getSpeed().getValue().getValue()));
             } else {
                 logger.info(format(" > diagnostics.bytes: %s", diagnostics));
