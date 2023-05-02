@@ -337,8 +337,10 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
         // read from string into VehicleAccess object
         VehicleAccess vehicleAccess = Json.Default.decodeFromString(VehicleAccess.Companion.serializer(), fileContent);
 
-        Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_ODOMETER);
-       
+        //Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_ODOMETER);
+        Command getVehicleSpeed = new Maintenance.GetState(Maintenance.PROPERTY_NEXT_INSPECTION_DATE);
+
+
 
         //Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_OEM_TROUBLE_CODE_VALUES);
 
@@ -358,6 +360,7 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
         }*/
 
         Diagnostics.State diagnostics;
+        Maintenance.State maintenance;
 
 
 
@@ -384,7 +387,6 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
         if (commandFromVehicle instanceof Diagnostics.State) {
             diagnostics = (Diagnostics.State) commandFromVehicle;
             //String stringText = new String(diagnostics.getByteArray());
-            //System.out.println(diagnostics.getSpeed().getValue());
             if (diagnostics.getSpeed().getValue() != null) {
                 logger.info(format(
                         "Got diagnostics response: %s",
@@ -398,9 +400,14 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
             } else {
                 logger.info(format(" > diagnostics.bytes: %s", diagnostics));
             }
-        }
-
-        else if (commandFromVehicle instanceof FailureMessage.State) {
+        } else if (commandFromVehicle instanceof Maintenance.State) {
+            maintenance = (Maintenance.State) commandFromVehicle;
+            if (maintenance.getNextInspectionDate().getValue() != null) {
+                logger.info(format(
+                        "Got maintenance response: %s",
+                        maintenance.getNextInspectionDate().getValue().getTime()));
+            }
+        } else if (commandFromVehicle instanceof FailureMessage.State) {
             FailureMessage.State failure = (FailureMessage.State) commandFromVehicle;
             if (failure.getFailedMessageID().getValue() == Identifier.VEHICLE_STATUS &&
                     failure.getFailedMessageType().getValue() == Type.GET) {
