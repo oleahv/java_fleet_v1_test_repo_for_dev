@@ -85,9 +85,9 @@ public class UserActions {
                 break;
             case 7:
                 System.out.println("Send telematics commands");
-                File file;
-                file = requester.FileChecker();
-                requester.Telematics(file);
+                String fileContent;
+                fileContent = requester.FileChecker();
+                requester.Telematics(fileContent);
                 break;
             default:
                 System.out.println("Input error. Please only use a single digit number");

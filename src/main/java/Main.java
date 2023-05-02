@@ -9,7 +9,7 @@ public class Main {
         if (!RunWebServerFlag) {
 
             WebServer webServer = new WebServer();
-            webServer.RunWebServer();
+           // webServer.RunWebServer();
             UserActions userActions = new UserActions();
             Requester requester = new Requester();
             requester.InstanceHMKit();

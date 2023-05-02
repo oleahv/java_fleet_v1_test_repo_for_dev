@@ -11,7 +11,7 @@ public class Credentials {
     // Determiner if the application is in production or sandbox
     private final HMKitFleet.Environment environment = HMKitFleet.Environment.SANDBOX;
 
-    private static final String vin = "1HMR47JWD7CDOW62D";
+    private static final String vin = "1HMO5MS8SSOBRONKP";
 
     private static final Brand carBrand = Brand.SANDBOX;
 
@@ -22,7 +22,7 @@ public class Credentials {
     private static final String serviceAccountPrivateKey = "";
     private static final String clientCertificate = "";
     private static final String clientPrivateKey = "";
-    private static final String oauthClientId = "";
+    private static final String oAuthClientId = "";
     private static final String oAuthClientSecret = "";
 
     // URI that the user can enter into a browser to start the Oauth flow
@@ -74,11 +74,11 @@ public class Credentials {
         return clientPrivateKey;
     }
 
-    public String getOauthClientId() {
-        return oauthClientId;
+    public String getOAuthClientId() {
+        return oAuthClientId;
     }
 
-    public String getoAuthClientSecret() {
+    public String getOAuthClientSecret() {
         return oAuthClientSecret;
     }
 

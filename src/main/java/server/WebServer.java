@@ -53,7 +53,7 @@ public class WebServer {
         // Step 1: Redirect the user to High Mobility's authorization endpoint to request permission for your application to access their resources
        // https://sandbox.owner-panel.high-mobility.com/hm_cloud/o/bb8545d7-22bd-4bbc-b3e4-58a84a5328ac/oauth?app_id=50A018C136CF9BB7CE539590&client_id=e52b2864-7611-4f26-94e4-d13f7039f25d&redirect_uri=http%3A%2F%2Fhm-postman.local
 
-        String authorizationUrl = credentials.getAUTHORIZATION_ENDPOINT() + "?client_id=" + credentials.getOauthClientId() + "&redirect_uri=" + credentials.getREDIRECT_URI() + "&response_type=code&scope=hm.fleets.manage";
+        String authorizationUrl = credentials.getAUTHORIZATION_ENDPOINT() + "?client_id=" + credentials.getOAuthClientId() + "&redirect_uri=" + credentials.getREDIRECT_URI() + "&response_type=code&scope=hm.fleets.manage";
         System.out.println("Please visit this URL to authorize your application: " + authorizationUrl);
 
         // Step 2: Implement web server to handle incoming requests on the redirect URI
@@ -75,7 +75,7 @@ public class WebServer {
                         .uri(URI.create("https://sandbox.api.high-mobility.com/v1/access_tokens"))
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .POST(HttpRequest.BodyPublishers.ofString("grant_type=authorization_code&code=" + authorizationCode + "&redirect_uri=" + credentials.getREDIRECT_URI()))
-                        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((credentials.getOauthClientId() + ":" + credentials.getoAuthClientSecret()).getBytes()))
+                        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString((credentials.getOAuthClientId() + ":" + credentials.getOAuthClientSecret()).getBytes()))
                         .build();
 
                 CompletableFuture<HttpResponse<String>> futureResponse = client.sendAsync(request, BodyHandlers.ofString());

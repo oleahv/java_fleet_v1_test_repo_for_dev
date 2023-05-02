@@ -1,13 +1,11 @@
 import LoginInfo.Credentials;
 import com.highmobility.autoapi.*;
-import com.highmobility.autoapi.value.Brand;
 import com.highmobility.hmkitfleet.HMKitFleet;
 import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
 import com.highmobility.hmkitfleet.model.*;
 import com.highmobility.hmkitfleet.network.Response;
 import com.highmobility.hmkitfleet.network.TelematicsCommandResponse;
 import com.highmobility.hmkitfleet.network.TelematicsResponse;
-import com.highmobility.value.Bytes;
 import kotlinx.serialization.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +23,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Base64;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 import static java.lang.String.format;
@@ -81,8 +78,8 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
                 credentials.getServiceAccountPrivateKey(),
                 credentials.getClientCertificate(),
                 credentials.getClientPrivateKey(),
-                credentials.getOauthClientId(),
-                credentials.getoAuthClientSecret()
+                credentials.getOAuthClientId(),
+                credentials.getOAuthClientSecret()
 
                 /*"4641e174-4134-44e0-a7ad-8b7110dddeb0",
                 "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgE76M1h3vVMe0qX8i\ngVxXT61MzKsXag4EeBp0LT0hnsmhRANCAASX/N2hmY9Y55zEboEGlyVCr/5YZ7BK\\nyeh8zs/MFmTaUWQUfcV1BleFsCmkg6AuAYYHUUHFpf69i8dhOHI2rjSf\n-----END PRIVATE KEY-----",
@@ -278,11 +275,11 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
 
     // Checks if the file exists. Creates it if it does not
     //https://www.webucator.com/article/how-to-display-the-contents-of-a-directory-in-java/
-    public File FileChecker() {
-        File fileResultFromSearch = SearchForFile();
-        if (fileResultFromSearch != null) {
+    public String FileChecker() {
+        String fileContentFromSearch = SearchForFile();
+        if (fileContentFromSearch != null) {
             System.out.println("found file without creation");
-            return fileResultFromSearch;
+            return fileContentFromSearch;
         }
 
         
@@ -298,6 +295,7 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
             VehicleAccess serverVehicleAccess = accessResponse.getResponse();
             System.out.println(serverVehicleAccess);
 
+
             String encoded = Json.Default.encodeToString(VehicleAccess.Companion.serializer(), serverVehicleAccess);
 
             //TODO: store securely with password
@@ -308,16 +306,21 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
             throw new RuntimeException(e);
         }
 
-        
-        File file = SearchForFile();
-        
-        // Response of file was not found, and had to be created.
-        return file;
+        return null;
     }
     
-    public File SearchForFile() {
-        String expectedFileName = credentials.getVin() + "_vehicleAccess.json";
-        // Check if vehicle access token is on file, create one if not
+    public String SearchForFile() {
+        String expectedFileContent = null;
+
+
+        try {
+            // Reads the content of the file at filepath into the variable (TODO: make it safe)
+            expectedFileContent = new String(Files.readAllBytes(Path.of("src/main/java/accessTokens/"  + credentials.getVin() + "_vehicleAccess.json")));
+        } catch (IOException e) {
+            return null;
+        }
+        return expectedFileContent;
+        /*// Check if vehicle access token is on file, create one if not
         File tokenDirectory = new File(baseURI);
         File[] filesInDirectory = tokenDirectory.listFiles();
         for (int i = 0; i < Objects.requireNonNull(filesInDirectory).length; i++) {
@@ -325,24 +328,16 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
                 System.out.println("found file");
                 return filesInDirectory[i];
             }
-        }
-        return null;
+        }*/
     }
 
 
-    public void Telematics(File file) {
-        // read from file into VehicleAccess object
-        String content = null;
-        try {
-            content = new String(Files.readAllBytes(Path.of(file.toURI())));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void Telematics(String fileContent) {
 
+        // read from string into VehicleAccess object
+        VehicleAccess vehicleAccess = Json.Default.decodeFromString(VehicleAccess.Companion.serializer(), fileContent);
 
-        VehicleAccess vehicleAccess = Json.Default.decodeFromString(VehicleAccess.Companion.serializer(), content);
-
-        Bytes getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_SPEED);
+        Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_ODOMETER);
        
 
         //Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_OEM_TROUBLE_CODE_VALUES);
@@ -386,18 +381,16 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
         //int calue_t = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData()).getCommandType();
 
 
-
-
-
+        System.out.println(commandFromVehicle);
         if (commandFromVehicle instanceof Diagnostics.State) {
             diagnostics = (Diagnostics.State) commandFromVehicle;
             //String stringText = new String(diagnostics.getByteArray());
-            System.out.println(diagnostics.getSpeed().getValue());
+            //System.out.println(diagnostics.getSpeed().getValue());
             if (diagnostics.getSpeed().getValue() != null) {
                 logger.info(format(
                         "Got diagnostics response: %s",
-                        diagnostics.getOemTroubleCodeValues()));
-                        //diagnostics.getSpeed().getValue().getValue()));
+                        //diagnostics.getOemTroubleCodeValues()));
+                        diagnostics.getSpeed().getValue().getValue()));
             } else {
                 logger.info(format(" > diagnostics.bytes: %s", diagnostics));
             }

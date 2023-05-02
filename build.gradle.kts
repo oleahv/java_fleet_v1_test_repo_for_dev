@@ -15,12 +15,8 @@ dependencies {
     // 13.2.0 not found, so using 13.1.1 (13.2.0 is released, but not on mavenCentral/Sona as of 10.3.2023)
     implementation("com.high-mobility:hmkit-auto-api:13.1.1")
     implementation("com.high-mobility:hmkit-crypto-telematics:0.1")
-/*
-    implementation("com.high-mobility", "auto-api-java", "1.1.0")
-    implementation("com.high-mobility", "crypto-java", "1.1.0")
-    implementation("com.high-mobility", "http-api-java", "1.1.0")
-    implementation("com.high-mobility", "request-api-java", "1.1.0")
-*/
+
+
 
     //JsonParser and JsonObject
     implementation("com.google.code.gson:gson:2.8.9")
