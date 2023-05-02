@@ -381,7 +381,6 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
         //int calue_t = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData()).getCommandType();
 
 
-        System.out.println(commandFromVehicle);
         if (commandFromVehicle instanceof Diagnostics.State) {
             diagnostics = (Diagnostics.State) commandFromVehicle;
             //String stringText = new String(diagnostics.getByteArray());
@@ -391,6 +390,11 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
                         "Got diagnostics response: %s",
                         //diagnostics.getOemTroubleCodeValues()));
                         diagnostics.getSpeed().getValue().getValue()));
+            } else if (diagnostics.getOdometer().getValue() != null) {
+                logger.info(format(
+                        "Got diagnostics response: %s",
+                        diagnostics.getOdometer().getValue().getValue()));
+
             } else {
                 logger.info(format(" > diagnostics.bytes: %s", diagnostics));
             }
