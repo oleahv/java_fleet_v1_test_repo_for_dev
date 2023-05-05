@@ -10,9 +10,11 @@ public class Credentials {
 
     // Determiner if the application is in production or sandbox
     private final HMKitFleet.Environment environment = HMKitFleet.Environment.SANDBOX;
+    
+    // TODO: covert to work with a list
+    private static final String vin = "1HMR47JWD7CDOW62D";
 
-    private static final String vin = "1HMO5MS8SSOBRONKP";
-
+    // TODO: perform a check wich brand it is
     private static final Brand carBrand = Brand.SANDBOX;
 
     // used as an iss for the requests
