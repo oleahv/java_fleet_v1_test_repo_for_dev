@@ -33,7 +33,7 @@ public class Credentials {
 
     // https://sandbox.api.high-mobility.com/v1
 
-    // URI to connect to. Sandbox is for the testing environment
+    // URI to connect to. Sandbox is for the testing environment. Used for Oauth flow
     private String DeterminEnvironment() {
         if (environment == HMKitFleet.Environment.SANDBOX) {
             //sandbox

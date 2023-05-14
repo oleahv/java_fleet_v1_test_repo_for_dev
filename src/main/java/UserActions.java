@@ -12,7 +12,7 @@ public class UserActions {
     /** bufferedReader.close();  Remember to do it at the correct place*/
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
     public int ReadUserInputFromTerminal() {
-        String inputFromUserString = null;
+        String inputFromUserString = "";
         // Could look into having the user spell it out, should be able to avoid issues with wrong format that way.
         int inputFromUserInt = -1;
 
@@ -32,7 +32,10 @@ public class UserActions {
 
         try {
             inputFromUserString = bufferedReader.readLine();
-            inputFromUserInt = Integer.parseInt(inputFromUserString);
+            if (inputFromUserString != null) {
+                inputFromUserInt = Integer.parseInt(inputFromUserString);
+            }
+
         } catch (IOException | NumberFormatException e) {
             throw new RuntimeException(e);
             //System.out.println("Input in not a valid option");
@@ -86,6 +89,7 @@ public class UserActions {
             case 7:
                 System.out.println("Send telematics commands");
                 String fileContent;
+                requester.FileChecker();
                 fileContent = requester.FileChecker();
                 requester.Telematics(fileContent);
                 break;

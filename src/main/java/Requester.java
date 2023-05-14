@@ -72,7 +72,6 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
  */
     public void InstanceHMKit() {
         // https://docs.high-mobility.com/guides/getting-started/fleet/
-        //TODO: seems like there is an error here..?
         ServiceAccountApiConfiguration configuration = new ServiceAccountApiConfiguration(
                 credentials.getServiceAccountAPIkey(),
                 credentials.getServiceAccountPrivateKey(),
@@ -134,22 +133,25 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
 
     // Checks the status of clearance based on vin number
     public String CheckClearanceStatus() {
-        Response<List<ClearanceStatus>> response = null;
+        Response<ClearanceStatus> response = null;
         try {
-            response = hmkitFleet.getClearanceStatuses().get();
+            response = hmkitFleet.getClearanceStatus(credentials.getVin()).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
 
         if (response.getResponse() != null) {
             logger.info(format("getClearanceStatuses response"));
-            for (ClearanceStatus status : response.getResponse()) {
-                if (status.getVin().equals(credentials.getVin())) {
-                    logger.info(format("status: %s:%s",
+                    System.out.println(response.getResponse());
+                    System.out.println("0: " + response.getResponse());
+                    System.out.println("1: " + response.getResponse().toString());
+                    System.out.println("2: " + response.getResponse().getStatus());
+                    System.out.println("3: " + response.getResponse().getStatus().toString().toLowerCase());
+                    /*logger.info(format("status: %s:%s",
                             status.getVin(),
-                            status.getStatus()));
-                }
-            }
+                            status.getStatus()));*/
+
+
         } else {
             logger.info(format("getClearanceStatuses error: %s", response.getError().getTitle()));
         }
@@ -406,6 +408,8 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
                 logger.info(format(
                         "Got maintenance response: %s",
                         maintenance.getNextInspectionDate().getValue().getTime()));
+                System.out.println(maintenance.getNextInspectionDate().getTimestamp().getTime());
+                System.out.println(maintenance.getNextInspectionDate().getValue().getTime());
             }
         } else if (commandFromVehicle instanceof FailureMessage.State) {
             FailureMessage.State failure = (FailureMessage.State) commandFromVehicle;
