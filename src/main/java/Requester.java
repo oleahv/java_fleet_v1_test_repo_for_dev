@@ -1,5 +1,8 @@
 import LoginInfo.Credentials;
 import com.highmobility.autoapi.*;
+import com.highmobility.autoapi.property.Property;
+import com.highmobility.autoapi.value.CheckControlMessage;
+import com.highmobility.autoapi.value.OemTroubleCodeValue;
 import com.highmobility.hmkitfleet.HMKitFleet;
 import com.highmobility.hmkitfleet.ServiceAccountApiConfiguration;
 import com.highmobility.hmkitfleet.model.*;
@@ -22,12 +25,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Base64;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static java.lang.String.format;
 
-
+/**
+ * Copyright <2023> <oleahv>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 public class Requester {
 
 
@@ -339,8 +352,20 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
         // read from string into VehicleAccess object
         VehicleAccess vehicleAccess = Json.Default.decodeFromString(VehicleAccess.Companion.serializer(), fileContent);
 
+
+        Command diagnosticsCommand = new Diagnostics.GetState(Diagnostics.PROPERTY_ODOMETER);
+
+        Command maintenanceCommand = new Maintenance.GetState(Maintenance.PROPERTY_NEXT_INSPECTION_DATE, Maintenance.PROPERTY_TIME_TO_NEXT_SERVICE,
+                Maintenance.PROPERTY_BRAKE_FLUID_CHANGE_DATE, Maintenance.PROPERTY_TIME_TO_NEXT_OIL_SERVICE,
+                Maintenance.PROPERTY_DISTANCE_TO_NEXT_OIL_SERVICE, Maintenance.PROPERTY_DISTANCE_TO_NEXT_SERVICE);
+
+
+
+        SendC(diagnosticsCommand, vehicleAccess);
+        SendC(maintenanceCommand, vehicleAccess);
+
         //Command getVehicleSpeed = new Diagnostics.GetState(Diagnostics.PROPERTY_ODOMETER);
-        Command getVehicleSpeed = new Maintenance.GetState(Maintenance.PROPERTY_NEXT_INSPECTION_DATE);
+       // Command getVehicleSpeed = new Maintenance.GetState(Maintenance.PROPERTY_NEXT_INSPECTION_DATE);
 
 
 
@@ -361,50 +386,99 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
             throw new RuntimeException(e);
         }*/
 
+
+
+
+
+
+    }
+
+    public void SendC(Command command, VehicleAccess vehicleAccess) {
+
         Diagnostics.State diagnostics;
         Maintenance.State maintenance;
 
 
-
         TelematicsResponse telematicsResponse;
         try {
-            // Sends command to the car (Get request)
-            telematicsResponse = hmkitFleet.sendCommand(getVehicleSpeed, vehicleAccess).get();
-            //telematicsResponse = hmkitFleet.sendCommand(new Bytes(getVechicleSpeedCommand), vehicleAccess).get();
-
+            // Request live data from the car trough High Mobility
+            telematicsResponse = hmkitFleet.sendCommand(command, vehicleAccess).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
-        logger.info(format("Got telematics response: %s - %s", telematicsResponse.getResponse(), telematicsResponse.getErrors()));
+        logger.info(format("Got telematicsResponse response: %s - %s", telematicsResponse.getResponse(), telematicsResponse.getErrors()));
 
         if (telematicsResponse.getResponse() == null || telematicsResponse.getResponse().getStatus() != TelematicsCommandResponse.Status.OK) {
             throw new RuntimeException("There was an error");
         }
 
-
         Command commandFromVehicle = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData());
-        //int calue_t = CommandResolver.resolve(telematicsResponse.getResponse().getResponseData()).getCommandType();
 
-
+        // Determine if Diagnostics or Maintenance
         if (commandFromVehicle instanceof Diagnostics.State) {
             diagnostics = (Diagnostics.State) commandFromVehicle;
-            //String stringText = new String(diagnostics.getByteArray());
-            if (diagnostics.getSpeed().getValue() != null) {
-                logger.info(format(
-                        "Got diagnostics response: %s",
-                        //diagnostics.getOemTroubleCodeValues()));
-                        diagnostics.getSpeed().getValue().getValue()));
-            } else if (diagnostics.getOdometer().getValue() != null) {
+
+            // Checks what data responses one was able to retrieve
+            if (diagnostics.getOdometer().getValue() != null) {
+                // TODO:
                 logger.info(format(
                         "Got diagnostics response: %s",
                         diagnostics.getOdometer().getValue().getValue()));
 
-            } else {
+            } else if (diagnostics.getOemTroubleCodeValues() != null) {
+                //TODO:
+                for (Property<OemTroubleCodeValue> oemTroubleCodeValue : diagnostics.getOemTroubleCodeValues()) {
+                    System.out.println(oemTroubleCodeValue.getValue());
+            }
+            } else if (diagnostics.getCheckControlMessages() != null) {
+                for (Property<CheckControlMessage> checkControlMessage : diagnostics.getCheckControlMessages()) {
+                    System.out.println(checkControlMessage.getValue().getStatus());
+                    System.out.println(checkControlMessage.getValue());
+                }
+
+                } else {
                 logger.info(format(" > diagnostics.bytes: %s", diagnostics));
             }
         } else if (commandFromVehicle instanceof Maintenance.State) {
             maintenance = (Maintenance.State) commandFromVehicle;
+
             if (maintenance.getNextInspectionDate().getValue() != null) {
+                Date nextInspectionDate = maintenance.getNextInspectionDate().getValue().getTime();
+
+                Calendar timestamp = maintenance.getNextInspectionDate().getTimestamp();
+                Long longTimestamp = null;
+                if(timestamp != null) {
+                    longTimestamp = timestamp.getTimeInMillis();
+                }
+                // Sends to DB
+
+                logger.info(format(
+                        "Got maintenance response: %s",
+                        maintenance.getNextInspectionDate().getValue().getTime()));
+                System.out.println(maintenance.getNextInspectionDate().getTimestamp().getTime());
+                System.out.println(maintenance.getNextInspectionDate().getValue().getTime());
+
+            } else if (maintenance.getTimeToNextService().getValue() != null) {
+                System.out.println(maintenance.getTimeToNextService().getValue().getValue());
+
+            }  else if (maintenance.getBrakeFluidChangeDate().getValue() != null) {
+                System.out.println(maintenance.getBrakeFluidChangeDate().getValue().getTime());
+
+            } else if (maintenance.getTimeToNextOilService().getValue() != null) {
+                System.out.println(maintenance.getTimeToNextOilService().getValue().getValue());
+
+            } else if (maintenance.getDistanceToNextOilService().getValue() != null) {
+                System.out.println(maintenance.getDistanceToNextOilService().getValue().getValue());
+
+            } else if (maintenance.getDistanceToNextService().getValue() != null) {
+                System.out.println(maintenance.getDistanceToNextService().getValue().getValue());
+
+            }
+        }
+
+
+
+        if (maintenance.getNextInspectionDate().getValue() != null) {
                 logger.info(format(
                         "Got maintenance response: %s",
                         maintenance.getNextInspectionDate().getValue().getTime()));
@@ -422,12 +496,6 @@ HMKitFleet.INSTANCE.setConfiguration(configuration);
                 }
             }
         }
-
-
-
-
-
-
     }
 
 
